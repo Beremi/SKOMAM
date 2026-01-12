@@ -108,6 +108,58 @@ def generate_synthetic_w_grid(L=2_000_000.0, nx=21, ny=21, n_days=30, day=24 * 3
     return x, y, t_grid, W_grid
 
 
+def w_synthetic(x_pos, y_pos, t, L=2_000_000.0, day=24 * 3600.0):
+    """
+    Evaluate the synthetic velocity field at a given position and time.
+
+    Parameters:
+        x_pos, y_pos : position in meters (scalars or arrays)
+        t            : time in seconds
+        L            : domain size used for scaling (meters)
+        day          : seconds per day
+
+    Returns:
+        Velocity vector(s) with shape (..., 2) in m/s.
+    """
+    x_pos = np.asarray(x_pos, dtype=float)
+    y_pos = np.asarray(y_pos, dtype=float)
+    t = float(t)
+
+    if not np.isfinite(t) or not np.all(np.isfinite(x_pos)) or not np.all(np.isfinite(y_pos)):
+        shape = np.broadcast(x_pos, y_pos).shape
+        return np.zeros(shape + (2,), dtype=float)
+
+    scale = 0.5 * L
+    X = x_pos / scale
+    Y = y_pos / scale
+
+    theta = 2.0 * np.pi * t / (5.0 * day)
+    base_amp = 2.2 + 0.6 * np.sin(2.0 * np.pi * t / (3.0 * day))
+    base = np.empty(X.shape + (2,), dtype=float)
+    base[..., 0] = base_amp * np.cos(theta)
+    base[..., 1] = base_amp * np.sin(theta)
+
+    radial_amp = 1.2 * np.sin(2.0 * np.pi * t / (2.2 * day))
+    radial = radial_amp * np.stack([X, Y], axis=-1) * np.exp(-0.8 * (X**2 + Y**2))[..., None]
+
+    cx = 0.45 * np.cos(2.0 * np.pi * t / (6.0 * day))
+    cy = 0.45 * np.sin(2.0 * np.pi * t / (6.0 * day))
+    Xc = X - cx
+    Yc = Y - cy
+    vortex1 = 5.0 * np.stack([-Yc, Xc], axis=-1) * np.exp(-4.0 * (Xc**2 + Yc**2))[..., None]
+
+    Xc2 = X + cx
+    Yc2 = Y + cy
+    vortex2 = -5.0 * np.stack([-Yc2, Xc2], axis=-1) * np.exp(-4.0 * (Xc2**2 + Yc2**2))[..., None]
+
+    phase1 = 2.0 * np.pi * (0.7 * X + 0.4 * Y + t / (4.5 * day))
+    phase2 = 2.0 * np.pi * (0.3 * X - 0.8 * Y - t / (3.2 * day))
+    wave1 = 1.8 * np.stack([np.cos(phase1), np.sin(phase1)], axis=-1)
+    wave2 = 1.2 * np.stack([-np.sin(phase2), np.cos(phase2)], axis=-1)
+
+    return base + radial + vortex1 + vortex2 + wave1 + 0.7 * wave2
+
+
 def _sample_time_slice(W_grid, t_grid, t, interpolate_time=True):
     t_grid = np.asarray(t_grid, dtype=float)
     t = float(t)
