@@ -2,62 +2,81 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def vykresli_drift(t, r, v=None, title=None):
+def vykresli_drift(t, r, v=None, a=None, title=None):
     """
     Plot drift trajectory in the plane and time series.
     When v is provided, the time series are shown as a 2x2 grid: x, y, v_x, v_y.
+    When a is provided, an extra row a_x, a_y is added (or shown with x, y if v is None).
 
     Parameters:
         t     : 1D array of time [s]
         r     : array (n, 2) with position [m]
         v     : array (n, 2) with velocity [m/s] (optional)
+        a     : array (n, 2) with acceleration [m/s^2] (optional)
         title : title for the trajectory plot (optional)
     """
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.plot(r[:, 0], r[:, 1], label="trajektorie")
     ax.scatter(r[0, 0], r[0, 1], color="green", label="start")
     ax.scatter(r[-1, 0], r[-1, 1], color="red", label="konec")
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
+    ax.set_xlabel(r"$x$ [m]")
+    ax.set_ylabel(r"$y$ [m]")
     ax.set_aspect("equal", "box")
     if title:
         ax.set_title(title)
     ax.grid(True)
-    ax.legend()
+    fig.subplots_adjust(right=0.78)
+    ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
 
-    if v is None:
+    if v is None and a is None:
         fig2, axes = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(6, 5))
         axes = np.atleast_1d(axes)
 
         axes[0].plot(t, r[:, 0])
-        axes[0].set_ylabel("x [m]")
+        axes[0].set_ylabel(r"$x$ [m]")
         axes[0].grid(True)
 
         axes[1].plot(t, r[:, 1])
-        axes[1].set_ylabel("y [m]")
-        axes[1].set_xlabel("t [s]")
+        axes[1].set_ylabel(r"$y$ [m]")
+        axes[1].set_xlabel(r"$t$ [s]")
         axes[1].grid(True)
     else:
-        fig2, axes = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(8, 5))
+        rows = 1 + (1 if v is not None else 0) + (1 if a is not None else 0)
+        fig2, axes = plt.subplots(nrows=rows, ncols=2, sharex=True, figsize=(8, 2.5 * rows))
         axes = np.asarray(axes)
 
-        axes[0, 0].plot(t, r[:, 0])
-        axes[0, 0].set_ylabel("x [m]")
-        axes[0, 0].grid(True)
+        row = 0
+        axes[row, 0].plot(t, r[:, 0])
+        axes[row, 0].set_ylabel(r"$x$ [m]")
+        axes[row, 0].grid(True)
 
-        axes[0, 1].plot(t, r[:, 1])
-        axes[0, 1].set_ylabel("y [m]")
-        axes[0, 1].grid(True)
+        axes[row, 1].plot(t, r[:, 1])
+        axes[row, 1].set_ylabel(r"$y$ [m]")
+        axes[row, 1].grid(True)
+        row += 1
 
-        axes[1, 0].plot(t, v[:, 0])
-        axes[1, 0].set_ylabel("v_x [m/s]")
-        axes[1, 0].set_xlabel("t [s]")
-        axes[1, 0].grid(True)
+        if v is not None:
+            axes[row, 0].plot(t, v[:, 0])
+            axes[row, 0].set_ylabel(r"$v_x$ [m/s]")
+            axes[row, 0].grid(True)
 
-        axes[1, 1].plot(t, v[:, 1])
-        axes[1, 1].set_ylabel("v_y [m/s]")
-        axes[1, 1].set_xlabel("t [s]")
-        axes[1, 1].grid(True)
+            axes[row, 1].plot(t, v[:, 1])
+            axes[row, 1].set_ylabel(r"$v_y$ [m/s]")
+            axes[row, 1].grid(True)
+            row += 1
+
+        if a is not None:
+            axes[row, 0].plot(t, a[:, 0])
+            axes[row, 0].set_ylabel(r"$a_x$ [m/s$^2$]")
+            axes[row, 0].grid(True)
+
+            axes[row, 1].plot(t, a[:, 1])
+            axes[row, 1].set_ylabel(r"$a_y$ [m/s$^2$]")
+            axes[row, 1].grid(True)
+            row += 1
+
+        axes[row - 1, 0].set_xlabel(r"$t$ [s]")
+        axes[row - 1, 1].set_xlabel(r"$t$ [s]")
 
     plt.tight_layout()
     plt.show()
@@ -270,8 +289,8 @@ def save_vector_field_animation(
     V0 = W_anim[0, ::stride, ::stride, 1]
     quiv = ax.quiver(XXs, YYs, U0, V0, scale=scale, width=width, pivot="mid")
     title = ax.set_title(f"t = {t_anim[0] / hour:.0f} h")
-    ax.set_xlabel("x [km]")
-    ax.set_ylabel("y [km]")
+    ax.set_xlabel(r"$x$ [km]")
+    ax.set_ylabel(r"$y$ [km]")
     ax.set_aspect("equal")
     ax.set_xlim(x.min() / 1000.0, x.max() / 1000.0)
     ax.set_ylim(y.min() / 1000.0, y.max() / 1000.0)
