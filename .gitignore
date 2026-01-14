@@ -1,4 +1,5 @@
-
+*.nbc
+*.nbi
 .ipynb_checkpoints/
 
 CV2/old/
@@ -6,3 +7,4 @@ CV2/old/
 past_SKOMAM/2021/CV3/__pycache__/
 
 CV3/__pycache__/
+cv3/__pycache__/cv3_utils.cpython-314.pyc
