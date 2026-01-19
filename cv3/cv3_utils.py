@@ -351,9 +351,13 @@ def show_like_post(like_data, post_data, xg, yg, title_like, title_post, u_true,
         c="white",
         label="MAP",
     )
-    axes[1].legend(loc="upper right")
+    axes[1].legend(
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1.0),
+        borderaxespad=0.0,
+    )
 
-    plt.tight_layout()
+    fig.tight_layout(rect=[0.0, 0.0, 0.85, 1.0])
     plt.show()
 
 
